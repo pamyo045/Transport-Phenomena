@@ -1,4 +1,4 @@
-function Inclined_mom_bal_ver1
+function Inclined_mom_bal
 %   Solution to the inclined plane momentum balance
 %   of a falling film of thickness delta
 %   with the following assumptions:

@@ -1,4 +1,4 @@
-function Dimless_unsteadyT_ver1
+function Dimless_unsteadyT
 % Solves the 1D unsteady-state temperature conduction heat equation in
 % dimentionless forms. 
 % d(theta)/d(tau)=d^2(theta)/(d(eta))^2 
