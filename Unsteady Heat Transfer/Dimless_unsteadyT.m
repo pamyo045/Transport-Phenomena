@@ -1,64 +1,59 @@
-function Dimless_unsteadyT
-% Solves the 1D unsteady-state temperature conduction heat equation in
-% dimentionless forms. 
-% d(theta)/d(tau)=d^2(theta)/(d(eta))^2 
-% theta=(T1-T)/(T1-T0), where T0 is the initial temperature of the slab
-% and T1 is the temperature imposed at the slab surfaces for time > 0
-% eta=x/b, where b is plane slab thickness divided by 2 (i.e. slab
-% thickness = 2b)
-% tau=alpha*t/b^2
-% d(theta)/d(tau)=d2(theta)/d(eta)2 
-% IC: @ tau=0, theta=1 
-% BC: @ eta=-1,+1 theta=0 for tau>0 
-% tmax=1; alpha=0.5; T0=20; T1=100;
+function Dimless_unsteadyT  
+    % set parameters:
+    T0=20;
+    T1=100;
+    alpha=5e-5;
+    b=2;
     
     etaR=linspace(0,1,50);
     etaL=linspace(-1,0,50);
-    eta=unique(cat(2,etaL,etaR)); %concatenates arrays along dim=2 (rows) 
-                                  %and is passed in unique to remove 
-                                  %duplicate zero element in array
+    eta=unique(cat(2,etaL,etaR)); % concatenates arrays along dim=2 (rows) 
+                                  % and is passed in unique to remove 
+                                  % duplicate zero element in array
     tau=linspace(0,1,400);
     xN=length(etaR);
     
-    theta=pdepe(0,@pdefun,@pdeic,@pdebc,eta,tau); %theta(t,x)
-    theta(1,:)=0; %enforces IC at tau=0
-    theta2=-theta(:,xN:end)+1; %flips the y-coord values about x-axis to 
-                               %resemble plots in Bird et al., 
-                               %i.e. theta2=T-T0/T1-T0
-    
-    figure;
-    hold on
+    theta=pdepe(0,@pdefun,@pdeic,@pdebc,eta,tau); % theta(t,x)
+    theta(1,:)=0; % enforces IC at tau=0
+    theta2=-theta(:,xN:end)+1; % flips the y-coord values about x-axis to 
+                               % resemble plots in Bird et al., 
+                               % i.e. theta2=T-T0/T1-T0
+    T=theta2*(T1-T0)+T0;
+    x=etaR*b;
+    t=tau*b^2/alpha;
     
     iterationCount=0;
     tauPlot=[0.01 0.04 0.1 0.2 0.4 0.6 1.0];
     
-    %the array ind stores the index locations of tauPlot values
+    % the array ind stores the index locations of tauPlot values
     ind=zeros(1,length(tauPlot));
     for i=1:length(tauPlot)
-        [~,ind(i)]=closest(tau,tauPlot(i)); %function that finds the index 
-                                            %whose value closest matching 
-                                            %in tauPlot
+        [~,ind(i)]=closest(tau,tauPlot(i)); % function that finds the index 
+                                            % whose value closest matching 
+                                            % in tauPlot
     end
     
-    %loop that plots the solution for various tauPlot values, serves as a
-    %comparison to the solutions of Bird et al. to show the accuracy of the
-    %solution found using pdepe and the analytical one from the authors.
-    for i=1:length(ind)
-        k=ind(i);
-        iterationCount=iterationCount+1;
-        ph=plot(etaR,theta2(k,:));
-        label(ph,sprintf('\\tau =%0.2f',tau(k)),'location','center','slope');
-    end
+%     figure;
+%     hold on
+    % loop that plots the solution for various tauPlot values, serves as a
+    % comparison to the solutions of Bird et al. to show the accuracy of the
+    % solution found using pdepe and the analytical one from the authors.
+%     for i=1:length(ind)
+%         k=ind(i);
+%         iterationCount=iterationCount+1;
+%         ph=plot(etaR,theta2(k,:));
+%         label(ph,sprintf('\\tau =%0.2f',tau(k)),'location','center','slope');
+%     end
     hold off
     
-    %limits the axis values for the plot
+    % limits the axis values for the plot
     xlim([0 1]);
     ylim([0 1]);
     
-    %calls the function for the interactive slider plot
+    % calls the function for the interactive slider plot
     createGUI;
     
-    %defines the model to solve required by pdepe function
+    % defines the model to solve required by pdepe function
     function [c,f,s] = pdefun(eta,tau,theta,DtauDeta)
         c = 1;
         f = DtauDeta;
@@ -70,7 +65,7 @@ function Dimless_unsteadyT
         theta0 = 1;      
     end
 
-    %defines the BCs for the model defined in pdefun
+    % defines the BCs for the model defined in pdefun
     function [pl,ql,pr,qr] = pdebc(etal,thetal,etar,thetar,tau)
         pl = thetal;
         ql = 0;
@@ -84,63 +79,131 @@ function Dimless_unsteadyT
         % all the code relevant to creating the plots, the interactive
         % sliders, and all related aspects to the UI.
 
-        fig = figure; % creates new (empty figure) window 
+        % creates new (empty figure) window 
+        fig1 = figure('ResizeFcn',@figPosition,'Visible','off'); 
         sVal = 1;   % slider index, used to initialize value of indices 
                     % which represent the index value of the dependant 
                     % variable array, eg. c_g(i,j)=f(t,x), (i or j)=sindex 
                     % depending on the slider wishing to display.
+        sVal2 = 1;
 
         theta_tSlide = @(sVal)theta2(round(sVal),:);
+        T_tSlide = @(sVal2)T(round(sVal2),:);
         
-        subplot(2,1,1); 
-
+        ax1=axes('Parent',fig1,'Units','pixel');
+        box on
         hold on
         ploth1 = plot(etaR,theta_tSlide(sVal));
         hold off
         xlabel('\eta =x/b');
         ylabel('\theta =(T-T_0)/(T_1-T_0)');
         ylim([0,1]);
-        xlim([0,1]);
-        ax = gca; % setting gca (MATLAB keyword for current active
-                  % axis) to ax for changing layout
-        ax.Position(2) = ax.Position(2)-0.10; %bottom
-        ax.Position(4) = ax.Position(4)+0.10; %height
+        xlim([0,1]);  
+        
+        ax2=axes('Parent',fig1,'Units','pixel');
         box on
-        panel1 = uipanel('Parent',fig,'Units','normalized',...
-            'Position',[0.5-0.2/2 0.0 0.2 0.1]);
-        panel2 = uipanel('Parent',fig,'Units','normalized',...
-            'Position',[0.0 0.1 1.0 0.1]);
+        hold on
+        ploth2 = plot(x,T_tSlide(sVal2));
+        hold off
+        xlabel('x (m)');
+        ylabel('T (C)');
+        ylim([0,T1]);
+        xlim([0,b]);
         
-        pos_f=ax.Position; %figure position
-        pos_p2=panel2.Position; %panel position
+        ax3=axes('Parent',fig1,'Units','pixel','Visible','off');
         
-        slider1 = uicontrol(panel2,'Style','slider',...
-            'Units','Normalized',...
+        slider1 = uicontrol(fig1,'Style','slider',...
             'value',sVal,...
-            'Position',[pos_f(1) 0.2 pos_f(3) 0.6],...
             'min',1,'max',length(tau));
-
-        txt1 = uicontrol(panel1,'Style','text',...
-            'Units','Normalized',...
-            'FontName','symbol',...
-            'FontSize',12,...
-            'Position',[0, 0, 0.5, 1],...
-            'String','t');
-       
-        txt2 = uicontrol(panel1,'Style','text',...
-            'Units','Normalized',...
-            'FontSize',12,...
-            'Position',[0.5, 0, 0.5, 1],...
-            'String',sprintf('= %0.1f',tau(round(sVal))));
-
+        txt1 = uicontrol(fig1,'Style','text',...
+            'String',sprintf('tau = %0.1f',tau(round(sVal))));
         hLstn1 = addlistener(slider1,'ContinuousValueChange',@updateplot1);
+        
+        slider2 = uicontrol(fig1,'Style','slider',...
+            'value',sVal2,...
+            'min',1,'max',length(t));
+        txt2 = uicontrol(fig1,'Style','text',...
+            'String',sprintf('t = %0.1f s',t(round(sVal2))));
+        hLstn2 = addlistener(slider2,'ContinuousValueChange',@updateplot2);
+        
+        txt3 = uicontrol(fig1,'Style','text',...
+            'String','T0 (C):');
+        edit3 = uicontrol(fig1,'Style','edit','Callback',@editCallback3);
 
+%         txt3 = uicontrol(fig1,'Style','text','FontName','Symbol',...
+%             'String','\\
+%         edit3 = uicontrol(fig1,'Style','edit');
+%         
+%         txt3 = uicontrol(fig1,'Style','text','FontName','Symbol',...
+%             'String','\\
+%         edit3 = uicontrol(fig1,'Style','edit');
+        
+        function figPosition(varargin)
+            figWidth=fig1.Position(3);
+            figHeight=fig1.Position(4);
+            VertSeg=3;
+            
+            ax1.OuterPosition(1)=0;
+            ax1.OuterPosition(3)=figWidth/VertSeg;
+            
+            ax2.OuterPosition(1)=ax1.OuterPosition(3)+ax1.OuterPosition(1);
+            ax2.OuterPosition(3)=figWidth/VertSeg;
+            
+            ax3.OuterPosition(1)=ax2.OuterPosition(3)+ax2.OuterPosition(1);
+            ax3.OuterPosition(3)=figWidth/VertSeg;
+            
+            ax1.Position(3)=ax2.OuterPosition(1)-ax1.Position(1);
+            ax2.Position(3)=ax3.OuterPosition(1)-ax2.Position(1);
+
+            slider1.Position(1)=ax1.Position(1);
+            slider1.Position(3)=ax1.Position(3);
+            txt1.Position(1)=ax1.Position(1);
+            txt1.Position(2)=slider1.Position(2)-txt1.Position(4);
+            txt1.Position(3)=ax1.Position(3);
+            
+            slider2.Position(1)=ax2.Position(1);
+            slider2.Position(3)=ax2.Position(3);
+            txt2.Position(1)=ax2.Position(1);
+            txt2.Position(2)=slider1.Position(2)-txt1.Position(4);
+            txt2.Position(3)=ax2.Position(3);
+          
+            ShiftUp1=slider1.Position(2)+slider1.Position(4);
+            ax1.OuterPosition(2)=ShiftUp1;
+            ax1.OuterPosition(4)=figHeight-ShiftUp1;
+            
+            ShiftUp2=slider2.Position(2)+slider2.Position(4);
+            ax2.OuterPosition(2)=ShiftUp2;
+            ax2.OuterPosition(4)=figHeight-ShiftUp2;
+            
+            edit3.Position(1)=ax2.OuterPosition(1)+ax2.OuterPosition(3);
+        end
+        
         function updateplot1(~,~)
             sVal = get(slider1,'value');
             set(ploth1,'YData',theta_tSlide(sVal));
-            set(txt2,'String',sprintf('= %0.1f',...
+            set(txt1,'String',sprintf('tau = %0.1f',...
                 tau(round(sVal))));
         end
+        function updateplot2(~,~)
+            sVal2 = get(slider2,'value');
+            set(ploth2,'YData',T_tSlide(sVal2));
+            set(txt2,'String',sprintf('t = %0.1f s',...
+                t(round(sVal2))));
+        end
+        function editCallback3(~,~)
+            sVal3 = get(edit3,'value');
+            T0 = sVal3;
+            sVal2 = get(slider2,'value');
+            T=theta2*(T1-T0)+T0;
+            x=etaR*b;
+            t=tau*b^2/alpha;
+            
+            T_tSlide = @(sVal2)T(round(sVal2),:);
+            set(ploth2,'YData',T_tSlide(sVal2));
+            disp('YES');
+        end
+        
+        set(fig1,'Visible','on');
     end
 
 end
