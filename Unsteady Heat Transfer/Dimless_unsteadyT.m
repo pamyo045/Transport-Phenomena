@@ -33,19 +33,6 @@ function Dimless_unsteadyT
                                             % in tauPlot
     end
     
-%     figure;
-%     hold on
-    % loop that plots the solution for various tauPlot values, serves as a
-    % comparison to the solutions of Bird et al. to show the accuracy of the
-    % solution found using pdepe and the analytical one from the authors.
-%     for i=1:length(ind)
-%         k=ind(i);
-%         iterationCount=iterationCount+1;
-%         ph=plot(etaR,theta2(k,:));
-%         label(ph,sprintf('\\tau =%0.2f',tau(k)),'location','center','slope');
-%     end
-    hold off
-    
     % limits the axis values for the plot
     xlim([0 1]);
     ylim([0 1]);
@@ -60,7 +47,7 @@ function Dimless_unsteadyT
         s = 0;
     end
 
-    %defines the ICs for the model defined in pdefun
+    % defines the ICs for the model defined in pdefun
     function theta0 = pdeic(eta)
         theta0 = 1;      
     end
@@ -129,14 +116,6 @@ function Dimless_unsteadyT
         txt3 = uicontrol(fig1,'Style','text',...
             'String','T0 (C):');
         edit3 = uicontrol(fig1,'Style','edit','Callback',@editCallback3);
-
-%         txt3 = uicontrol(fig1,'Style','text','FontName','Symbol',...
-%             'String','\\
-%         edit3 = uicontrol(fig1,'Style','edit');
-%         
-%         txt3 = uicontrol(fig1,'Style','text','FontName','Symbol',...
-%             'String','\\
-%         edit3 = uicontrol(fig1,'Style','edit');
         
         function figPosition(varargin)
             figWidth=fig1.Position(3);
