@@ -1,4 +1,4 @@
-function dimensionless_unsteady_ht  
+function transient_conduction_heat_transfer  
     % set parameters:
     T0=20;
     T1=100;
