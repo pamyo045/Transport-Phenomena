@@ -1,6 +1,6 @@
-# Inclined Plane Momentum Balance
+# Inclined Plane Steady Momentum Balance
 
-## inclined_plane_momentum_balance.m
+## inclined_plane_steady_momentum.m
 This code plots the solution to the inclined plane momentum balance of a falling film with an interactive slider to allow the user to change some of the key parameters.
 
 ### The assumptions:

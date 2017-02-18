@@ -1,83 +1,74 @@
-function concentric_cylinder_momentum_balance       
+function handles = inclined_plane_steady_momentum
     % parameter values
-    omega_o = 2;
-    omega_i = 4;
-    Ro      = 0.8;
-    Ri      = 0.5; 
-    r       = linspace(0.1,5*Ro,100);
-    
-    % calcs solution array for temp profile using plotValFcn
-    plotVal = plotValFcn('Ro',Ro); 
-    YMax    = max(plotVal.Y); % find maximum value to set limit of y-axis
-    XMax    = max(plotVal.X); % find maximum value to set limit of y-axis
+    delta = 2.5/1000; % m; film thickness
+    beta  = 0.5;      % --; angle of inclination
+    rho   = 0.8e+3;   % kg/m^3; density
+    nu    = 2e-4;     % m2/s; kinematic viscosity
+    mu    = nu*rho;   % Pa.s; dynamic viscosity
+    g     = 9.81;     % m/s^2; gravitational constant
+    x     = linspace(0,delta,60); % vector of thickness of film [0,delta]
+
+    % calcs solution array for velocity profile using plotValFcn
+    plotVal = plotValFcn('mu',mu); 
+    plotMax = max(plotVal'); % find maximum value to set limit of y-axis
 
     createGUI; % calls createGUI to built interactive plot and sliders
     %----------------------------------------------------------------------
     function fun = plotValFcn(varStr,value)
         eval(sprintf('%s = %d;',varStr,value));
-        fun = Velocity_profile(omega_o,omega_i,Ro,Ri,r);
+        fun = (rho*g*delta^2*cos(beta)/(2*mu))*(1-(x/delta).^2);
     end
     %----------------------------------------------------------------------
     function createGUI
         hFig1 = figure('ResizeFcn',@figPosition,'Visible','off');
-        
-        sVal1 = omega_o;
-        sVal2 = omega_i;
-        sVal3 = Ro;
-        sVal4 = Ri;
-        
-        sVal1Name = 'omega_o';
-        sVal2Name = 'omega_i';
-        sVal3Name = 'Ro';
-        sVal4Name = 'Ri';
-        
-        stxt1 = 'OUTTER ANGULAR VELOCITY = %#.3g rad/s : ';
-        stxt2 = 'INNER ANGULAR VELOCITY = %#.3g rad/s : ';
-        stxt3 = 'OUTTER CYLINDER RADIUS = %#5.3g m : ';
-        stxt4 = 'INNER CYLINDER RADIUS = %#.3g m : ';
-        
-        sRangeMin = 0.1;
-        sRangeMax = 2;
+        sVal1 = mu;
+        sVal2 = beta;
+        sVal3 = rho;
+        sVal4 = delta;
         
         ax1    = axes('Parent',hFig1,'Units','pixel');
-        hPlot1 = plot(ax1,plotVal.X,plotVal.Y);
-        title('CONCENTRIC CYLINDER ANGULAR VELOCITY PROFILE');
-        xlabel('r (m) ');
-        ylabel('v_{\theta}(r) (m/s) ');
-        ylim([0,YMax]);
-        xlim([0,XMax]);
+        hPlot1 = plot(ax1,x,plotVal);
+        title('INCLINED MOMENTUM BALANCE');
+        xlabel('Distance, x (m)','FontSize',16);
+        ylabel('Velocity, v_z(x) (m/s)','FontSize',16);
+        ylim([0,plotMax]);
+        xlim([0,delta]);
         plotXRange = hPlot1.XData(end) - hPlot1.XData(1);
         plotYRange = hPlot1.YData(end) - hPlot1.YData(1);
         plotXMid   = hPlot1.XData(1) + plotXRange/2;
-        ptxt1 = text(plotXMid,0.9*max(hPlot1.YData),'$v_{\theta}(r) = \frac{kR}{1-k^2}[(\Omega_o-\Omega_ik^2)(\frac{r}{kR})+(\Omega_i-\Omega_o)(\frac{kR}{r})$','interpreter','latex');
-        ptxt1.FontSize = 15;
+        ptxt1 = text(plotXMid,0.9*max(hPlot1.YData),'v_z(x) = \rhog\delta^2 cos(\beta)/(2\mu))[1 - (x/\delta)^2]','FontSize',14);
         ptxt1.HorizontalAlignment = 'center';
+        
+        stxt1 = 'VISCOSITY = %#.3f kg/m.s : ';
+        stxt2 = 'INCLINATION ANGLE = %#.2g : ';
+        stxt3 = 'DENSITY = %#5.4g kg/m^3 : ';
+        stxt4 = 'FILM THICKNESS = %#.4f m : ';
         
         %------------------------------------------------------------------
         slider1 = uicontrol('Parent',hFig1,'Style','slider',...
                             'value',sVal1,...
-                            'min',sRangeMin*sVal1,'max',sRangeMax*sVal1);
+                            'min',0.5*sVal1,'max',1.5*sVal1);
         txt1    = uicontrol('Style','text','String',...
                             sprintf(stxt1,sVal1));   
         hLstn1  = addlistener(slider1,'ContinuousValueChange',@updateplot1);
         %------------------------------------------------------------------
         slider2 = uicontrol('Parent',hFig1,'Style','slider',...
                             'value',sVal2,...
-                            'min',sRangeMin*sVal2,'max',sRangeMax*sVal2);
+                            'min',0.5*sVal2,'max',1.5*sVal2);
         txt2    = uicontrol('Style','text','String',...
                             sprintf(stxt2,sVal2));   
         hLstn2  = addlistener(slider2,'ContinuousValueChange',@updateplot2);
         %------------------------------------------------------------------
         slider3 = uicontrol('Parent',hFig1,'Style','slider',...
                             'value',sVal3,...
-                            'min',sRangeMin*sVal3,'max',sRangeMax*sVal3);
+                            'min',0.5*sVal3,'max',1.5*sVal3);
         txt3    = uicontrol('Style','text','String',...
                             sprintf(stxt3,sVal3));   
         hLstn3  = addlistener(slider3,'ContinuousValueChange',@updateplot3);
         %------------------------------------------------------------------
         slider4 = uicontrol('Parent',hFig1,'Style','slider',...
                             'value',sVal4,...
-                            'min',sRangeMin*sVal4,'max',sRangeMax*sVal4);
+                            'min',0.5*sVal4,'max',1.5*sVal4);
         txt4    = uicontrol('Style','text','String',...
                             sprintf(stxt4,sVal4));   
         hLstn4  = addlistener(slider4,'ContinuousValueChange',@updateplot4);
@@ -121,68 +112,43 @@ function concentric_cylinder_momentum_balance
             txt4.Position(2)    = slider4.Position(2);
             txt4.HorizontalAlignment = 'right';
             
-            shiftUp   = slider4.Position(2) + slider4.Position(4);
+            ShiftUp   = slider4.Position(2) + slider4.Position(4);
 
-            ax1pos(2) = shiftUp;
-            ax1pos(4) = figHeight - shiftUp;
+            ax1pos(2) = ShiftUp;
+            ax1pos(4) = figHeight - ShiftUp;
             ax1pos(3) = figWidth;
             ax1pos(1) = 0;
-
+  
+            handles   = struct('fig',hFig1,'slider1',slider1,'txt1',txt1,'plot',hPlot1);
             set(ax1,'OuterPosition',ax1pos);
             
         end
         %------------------------------------------------------------------
         function updateplot1(~,~)
             sVal1 = get(slider1,'value');
-            plotVal = plotValFcn(sVal1Name,sVal1);
-            set(hPlot1,'YData',plotVal.Y);
+            set(hPlot1,'YData',plotValFcn('mu',sVal1));
             set(txt1,'String',sprintf(stxt1,sVal1));
-            ylim([0,YMax]);
-            xlim([0,XMax]);
         end
         %------------------------------------------------------------------
         function updateplot2(~,~)
             sVal2 = get(slider2,'value');
-            plotVal = plotValFcn(sVal2Name,sVal2);
-            set(hPlot1,'YData',plotVal.Y);
+            set(hPlot1,'YData',plotValFcn('beta',sVal2));
             set(txt2,'String',sprintf(stxt2,sVal2));
-            ylim([0,YMax]);
-            xlim([0,XMax]);
         end
         %------------------------------------------------------------------
         function updateplot3(~,~)
             sVal3 = get(slider3,'value');
-            plotVal = plotValFcn(sVal3Name,sVal3);
-            set(hPlot1,'YData',plotVal.Y);
+            set(hPlot1,'YData',plotValFcn('rho',sVal3));
             set(txt3,'String',sprintf(stxt3,sVal3));
-            ylim([0,YMax]);
-            xlim([0,XMax]);
         end
         %------------------------------------------------------------------
         function updateplot4(~,~)
             sVal4 = get(slider4,'value');
-            plotVal = plotValFcn(sVal4Name,sVal4);
-            set(hPlot1,'YData',plotVal.Y);
+            set(hPlot1,'YData',plotValFcn('delta',sVal4));
             set(txt4,'String',sprintf(stxt4,sVal4));
-            ylim([0,YMax]);
-            xlim([0,XMax]);
         end
         %------------------------------------------------------------------
         set(hFig1,'Visible','on');
     end
     %----------------------------------------------------------------------
-end
-
-function out = Velocity_profile(omega_o,omega_i,Ro,Ri,r)
-    wi      = omega_i;
-    wo      = omega_o;
-    k       = Ri/Ro;
-    v_theta = zeros(length(r),1);
-    
-    for i = 1:length(r)
-        v_theta(i) = k*Ro/(1-k^2)*((wo-wi*k^2)*r(i)/(k*Ro)+(wi-wo)*(k*Ro/r(i)));
-    end
-    
-    out.Y = v_theta;
-    out.X = r;
 end

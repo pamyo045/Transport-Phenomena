@@ -1,6 +1,6 @@
-# Transient Conduction Heat Transfer
+# Vertical Plane Transient Heat Balance
 
-## transient_conduction_heat_transfer.m
+## vertical_plane_transient_heat.m
 Solves the 1D unsteady-state temperature conduction heat equation in dimentionless form.
 
 ### Derivation:
