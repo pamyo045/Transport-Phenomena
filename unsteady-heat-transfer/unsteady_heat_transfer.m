@@ -1,4 +1,4 @@
-function y=USHT
+function y = unsteady_heat_transfer
 
 PI    = pi();
 % alfa  = 1;    %

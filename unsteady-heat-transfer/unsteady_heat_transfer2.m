@@ -1,4 +1,4 @@
-function out = USHT2(tend,alfa,width)
+function out = unsteady_heat_transfer2(tend,alfa,width)
 % temporal domain
 nt   = 2;
 tau  = [0 tend*alfa/width^2];

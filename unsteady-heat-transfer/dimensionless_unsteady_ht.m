@@ -1,4 +1,4 @@
-function Dimless_unsteadyT  
+function dimensionless_unsteady_ht  
     % set parameters:
     T0=20;
     T1=100;
